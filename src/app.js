@@ -17,7 +17,7 @@ const { verifyJWT, authRole } = require("./controller/AuthController");
 const routeLogin = require("./routes/login");
 const routeUser = require("./routes/user");
 const routeTeam = require("./routes/team");
-const routeTeamNoAuth = require("./routes/team-noauth");
+const routeAudioNoAuth = require("./routes/audio-noauth");
 
 // log file usign morgan
 // create a write stream (append mode)
@@ -54,7 +54,7 @@ app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
 // no auth routes fos users not logged in
-app.use("/api/teams-noauth", routeTeamNoAuth);
+app.use("/api/audio-noauth", routeAudioNoAuth);
 
 
 // use routes (and api paths) after middlewares
