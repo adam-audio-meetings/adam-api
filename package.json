@@ -1,0 +1,35 @@
+{
+  "name": "adam-api",
+  "version": "1.0.0",
+  "description": "Online teams - Educational project",
+  "main": "app.js",
+  "engines": {
+    "node": "12.16.x",
+    "npm": "6.13.x"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rodrigo Palermo <avilapalermo@gmail.com",
+  "contributors": [
+    "Leonardo Nunes <leonardogremio.silva@gmail.com>"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv-safe": "^8.2.0",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.6.1",
+    "mongoose": "^5.10.3",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^6.11.0",
+    "nodemon": "^2.0.4",
+    "prettier": "2.1.2"
+  }
+}
