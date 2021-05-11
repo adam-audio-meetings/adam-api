@@ -1,39 +1,46 @@
 const Audio = require("../model/Audio");
 
+
 // list all
-// exports.list = (req, res) => {
-//   Audio.find().
-//     populate('teams', ['name', 'description']).
-//     exec((err, audios) => {
-//       if (err) {
-//         res.status(500).send({ msg: err });
-//         return console.error(err);
-//       }
-//       res.json(audios);
-//     });
-// };
+exports.list = (req, res) => {
+  Audio.find().
+    populate('teams', ['name', 'description']).
+    exec((err, audios) => {
+      if (err) {
+        res.status(500).send({ msg: err });
+        return console.error(err);
+      }
+      res.json(audios);
+    });
+};
 
 // get by _id
-// exports.get_by_id = (req, res) => {
-//   Audio.findOne({ _id: req.params.id }, (err, audio) => {
-//     if (audio) {
-//       res.json(audio);
-//     } else {
-//       res.status(404).send({ msg: "Audio not found" });
-//     }
-//   });
-// };
-
-// add
-exports.add = (req, res) => {
-  const newAudio = new Audio(req.body);
-  newAudio.save((err, audio) => {
-    if (err) return console.error(err);
-    res.status(201).json(audio);
+exports.get_by_id = (req, res) => {
+  Audio.findOne({ _id: req.params.id }, (err, audio) => {
+    if (audio) {
+      res.json(audio);
+    } else {
+      res.status(404).send({ msg: "Audio not found" });
+    }
   });
 };
 
-//alter
+// add
+exports.add = (req, res, err) => {
+  console.log('UPLOAD REQ:', req.files)
+  res.send({ msg: 'teste audio controller res'});
+};
+// add sem gridfs
+// exports.add = (req, res) => {
+//   const newAudio = new Audio(req.body);
+//   newAudio.save((err, audio) => {
+//     if (err) return console.error(err);
+//     console.log(audio);
+//     res.status(201).json(audio);
+//   });
+// };
+
+// alter
 // exports.alter = (req, res) => {
 //   let id = req.params.id;
 //   let audioAlter = req.body;
