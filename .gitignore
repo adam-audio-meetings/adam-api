@@ -1,5 +1,6 @@
 node_modules
 src/log/*.log
+uploads
 
 .DS_Store
 /dist

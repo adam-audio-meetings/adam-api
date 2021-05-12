@@ -116,7 +116,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
       }
   });
   form.on('end', function () {
-      res.send('Completed ... go check fs.files & fs.chunks in mongodb');
+    res.send({ msg: 'Concluído upload de áudio no servidor' });
   });
 });
 
