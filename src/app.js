@@ -5,7 +5,15 @@ const path = require("path");
 const app = express();
 const mongoose = require("mongoose");
 const morgan = require("morgan");
+
+const multer = require('multer');
+const GridFsStorage = require('multer-gridfs-storage');
+
+const crypto = require('crypto');
+const Grid = require('gridfs-stream');
+var formidable = require("formidable");
 require('dotenv-safe').config();
+
 
 // disable auth on .env only for quick tests purpose
 const enable_auth = process.env.ENABLE_AUTH;
@@ -27,19 +35,24 @@ const accessLogStream = fs.createWriteStream(
 );
 
 // database connection - using mongoose
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/adam", {
+const mongoURI = process.env.MONGODB_URI || "mongodb://localhost:27017/adam";
+
+mongoose.connect(mongoURI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useFindAndModify: false, // skip warnings on find and modify
-}); //coordinator uses then and catch Promises. Mongoose tutorial uses as below
+  useFindAndModify: false // skip warnings on find and modify
+});
 
 // to mongoose be acessible by model/User ?
 mongoose.Promise = global.Promise
-
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
+const connection = mongoose.connection;
+connection.on("error", console.error.bind(console, "connection error:"));
+let gfs;
+connection.once("open", () => {
   // connected
+  // var gfs = Grid(connection, mongo) // sem mongoose
+  // gfs = Grid(connection.db, mongoose.mongo); // com mongoose (assign the driver mongoose.mongo)
+  // gfs.collection("uploads");
   console.log("Connection to database estabilished");
 });
 
@@ -47,14 +60,128 @@ db.once("open", () => {
 app.use(cors());
 
 // middlewares
-app.use(express.json()); // for parsing application/json
+// app.use(express.json({ limit: '50mb' }); //??? for parsing application/json
+app.use(express.json());
+// app.use(express.urlencoded({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true })); // for parsing applications/x-www-form-urlencoded
 // log middleware
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
+
+
+// Storage engine
+// const storage = new GridFsStorage({
+//   url: mongoURI,
+//   options: {
+//    useNewUrlParser: true,
+//    useUnifiedTopology: true
+//   },
+//   file: (req, file) => {
+//     return new Promise((resolve, reject) => {
+//       crypto.randomBytes(16, (err, buf) => {
+//         if (err) {
+//           return reject(err);
+//         }
+//           console.log('inside audio-noauth storage')
+//         const filename = file.originalname;
+//         const fileInfo = {
+//           filename: filename,
+//           bucketName: "uploads"
+//         };
+//         resolve(fileInfo);
+//       })
+//     })
+//   }
+// });
+
+// const upload = multer({ storage: storage });
+
+
+app.post('/api/audio-noauth/upload', function (req, res) {
+  var form = new formidable.IncomingForm();
+  form.uploadDir = __dirname+"/uploads";
+  form.keepExtensions = true;
+  form.parse(req, function (err, fields, files) {
+      if (!err) {
+          console.log('Files Uploaded: ' + files.file)
+          Grid.mongo = mongoose.mongo;
+          var gfs = Grid(connection.db);
+          var writestream = gfs.createWriteStream({
+            filename: files.file.name,
+            // testes metadata
+            metadata: { duration: '1000', user: '1', team: '2'}
+          });
+          fs.createReadStream(files.file.path).pipe(writestream);
+      }
+  });
+  form.on('end', function () {
+      res.send('Completed ... go check fs.files & fs.chunks in mongodb');
+  });
+});
+
+// exemplo get audio file em banco
+// https://grokonez.com/node-js/gridfs/nodejs-upload-download-files-to-mongodb-by-stream-based-gridfs-api-mongoose
+app.get('/audio-in-db', (req, res) => {
+  // Check if file exists on MongoDB
+  // let filename = 
+  let id = "609b007829740040f84d59af"
+  Grid.mongo = mongoose.mongo;
+  let gfs = Grid(connection.db);
+  gfs.exist({ _id: id }, (err, file) => {
+    if (err || !file) {
+      res.status(404).send("Arquivo não encontrado")
+    } else {
+      gfs.createReadStream({ _id: id }).pipe(res)
+    }
+  })
+});
+
+// exemplo get audio file na pasta
+// https://dev.to/abdisalan_js/how-to-code-a-video-streaming-server-using-nodejs-2o0
+app.get("/audio-in-folder", function (req, res) {
+  // Ensure there is a range given for the audio
+  const range = req.headers.range;
+  if (!range) {
+    res.status(400).send("Requires Range header");
+  }
+
+  // get audio stats (about 1MB?)
+  const audioPath = __dirname+"/uploads/test7.weba";
+  const audioSize = fs.statSync(audioPath).size;
+
+  // Parse Range
+  // Example: "bytes=32324-"
+  // const CHUNK_SIZE = 10 ** 6; // 1MB
+  const CHUNK_SIZE = 10 ** 6; // 1MB
+  const start = Number(range.replace(/\D/g, ""));
+  const end = Math.min(start + CHUNK_SIZE, audioSize - 1);
+
+  // Create headers
+  const contentLength = end - start + 1;
+  const headers = {
+    "Content-Range": `bytes ${start}-${end}/${audioSize}`,
+    "Accept-Ranges": "bytes",
+    "Content-Length": contentLength,
+    "Content-Type": "audio/webm; codecs=opus",
+  };
+
+  // HTTP Status 206 for Partial Content
+  res.writeHead(206, headers);
+
+  // create audio read stream for this particular chunk
+  const audioStream = fs.createReadStream(audioPath, { start, end });
+
+  // Stream the audio chunk to the client
+  audioStream.pipe(res);
+});
+
 // no auth routes fos users not logged in
-app.use("/api/audio-noauth", routeAudioNoAuth);
+// app.use("/api/audio-noauth", routeAudioNoAuth);
+// app.post("/api/audio-noauth/upload", (req, res, err) => {
+//   res.send(req.files);
+// });
+
 
 
 // use routes (and api paths) after middlewares
