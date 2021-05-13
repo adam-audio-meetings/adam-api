@@ -3,6 +3,21 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const app = express();
+const server = require('http').createServer(app);
+
+let protocol = "http";
+let host = process.env.HEROKU_APP_NAME || "localhost";
+let port = process.env.PORT || 3000;
+
+const io = require('socket.io')(server, {
+  //https://socket.io/docs/v3/handling-cors/
+  cors: {
+    // origin: `${protocol}://${host}:${port}`,
+    // origin: `*`, // FIXME
+    origin: 'http://localhost:4200', // FIXME
+    methods: ["GET", "POST"]
+  }
+});
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 
@@ -13,6 +28,10 @@ const crypto = require('crypto');
 const Grid = require('gridfs-stream');
 var formidable = require("formidable");
 require('dotenv-safe').config();
+
+// socket.io params
+let timerId = null;
+let sockets = new Set();
 
 
 // disable auth on .env only for quick tests purpose
@@ -68,7 +87,48 @@ app.use(express.urlencoded({ extended: true })); // for parsing applications/x-w
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
+// socket.io tests
+io.on('connection', socket => {
 
+  sockets.add(socket);
+  console.log(`Socket ${socket.id} added`);
+
+  if (!timerId) {
+    startTimer();
+  }
+
+  socket.on('clientdata', data => {
+    console.log(data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`Deleting socket: ${socket.id}`);
+    sockets.delete(socket);
+    console.log(`Remaining sockets: ${sockets.size}`);
+  });
+
+});
+
+function startTimer() {
+  //Simulate stock data received by the server that needs 
+  //to be pushed to clients
+  timerId = setInterval(() => {
+    if (!sockets.size) {
+      clearInterval(timerId);
+      timerId = null;
+      console.log(`Timer stopped`);
+    }
+    let value = ((Math.random() * 50) + 1).toFixed(2);
+    //See comment above about using a "room" to emit to an entire
+    //group of sockets if appropriate for your scenario
+    //This example tracks each socket and emits to each one
+    for (const s of sockets) {
+      console.log(`Emitting value: ${value}`);
+      s.emit('data', { data: value });
+    }
+
+  }, 2000);
+}
 
 // Storage engine
 // const storage = new GridFsStorage({
@@ -110,7 +170,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
           var writestream = gfs.createWriteStream({
             filename: files.file.name,
             // testes metadata
-            metadata: { duration: '1000', user: '1', team: '2'}
+            // metadata: { user: '1', team: '2'}
           });
           fs.createReadStream(files.file.path).pipe(writestream);
       }
@@ -202,10 +262,6 @@ app.use("/api/users", routeUser);
 app.use("/api/teams", routeTeam);
 
 
-let protocol = "http";
-let host = process.env.HEROKU_APP_NAME || "localhost";
-let port = process.env.PORT || 3000;
-
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server started at ${protocol}://${host}:${port}`);
 });
