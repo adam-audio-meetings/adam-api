@@ -13,8 +13,8 @@ const io = require('socket.io')(server, {
   //https://socket.io/docs/v3/handling-cors/
   cors: {
     // origin: `${protocol}://${host}:${port}`,
-    // origin: `*`, // FIXME
-    origin: 'http://localhost:4200', // FIXME
+    //origin: `*`, // FIXME
+    origin: 'http://localhost:4200', // FIXME: única instancia
     methods: ["GET", "POST"]
   }
 });
@@ -87,48 +87,71 @@ app.use(express.urlencoded({ extended: true })); // for parsing applications/x-w
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
-// socket.io tests
-io.on('connection', socket => {
+// socket.io tests 1 (não)
+// io.on('connection', socket => {
 
-  sockets.add(socket);
-  console.log(`Socket ${socket.id} added`);
+//   socket.join("room1");
+//   sockets.add(socket);
+//   console.log("Socket rooms: ", socket.rooms);
+//   console.log(`Socket ${socket.id} added`);
 
-  if (!timerId) {
-    startTimer();
-  }
+//   if (!timerId) {
+//     startTimer();
+//   }
 
-  socket.on('clientdata', data => {
-    console.log(data);
+//   socket.on('clientdata', data => {
+//     console.log(data);
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log(`Deleting socket: ${socket.id}`);
+//     sockets.delete(socket);
+//     console.log(`Remaining sockets: ${sockets.size}`);
+//   });
+
+// });
+
+// console.log('Client sockets: ', sockets);
+
+// function startTimer() {
+//   //Simulate stock data received by the server that needs 
+//   //to be pushed to clients
+//   timerId = setInterval(() => {
+//     if (!sockets.size) {
+//       clearInterval(timerId);
+//       timerId = null;
+//       console.log(`Timer stopped`);
+//     }
+//     let value = ((Math.random() * 50) + 1).toFixed(2);
+//     //See comment above about using a "room" to emit to an entire
+//     //group of sockets if appropriate for your scenario
+//     //This example tracks each socket and emits to each one
+//     for (const s of sockets) {
+//       console.log(`Emitting value: ${value}`);
+//       s.emit('data', { data: value });
+//     }
+
+//   }, 2000);
+// }
+
+// socket.io test2
+io.on("connection", socket => {
+  // Log whenever a user connects
+  console.log("user connected");
+
+  // Log whenever a client disconnects from our websocket server
+  socket.on("disconnect", function() {
+    console.log("user disconnected");
   });
 
-  socket.on('disconnect', () => {
-    console.log(`Deleting socket: ${socket.id}`);
-    sockets.delete(socket);
-    console.log(`Remaining sockets: ${sockets.size}`);
+  // When we receive a 'message' event from our client, print out
+  // the contents of that message and then echo it back to our client
+  // using `io.emit()`
+  socket.on("clientMessage", message => {
+    console.log("Message Received: " + message);
+    io.emit("serverMessage", { type: "new-message", text: message });
   });
-
 });
-
-function startTimer() {
-  //Simulate stock data received by the server that needs 
-  //to be pushed to clients
-  timerId = setInterval(() => {
-    if (!sockets.size) {
-      clearInterval(timerId);
-      timerId = null;
-      console.log(`Timer stopped`);
-    }
-    let value = ((Math.random() * 50) + 1).toFixed(2);
-    //See comment above about using a "room" to emit to an entire
-    //group of sockets if appropriate for your scenario
-    //This example tracks each socket and emits to each one
-    for (const s of sockets) {
-      console.log(`Emitting value: ${value}`);
-      s.emit('data', { data: value });
-    }
-
-  }, 2000);
-}
 
 // Storage engine
 // const storage = new GridFsStorage({
@@ -236,7 +259,7 @@ app.get("/audio-in-folder", function (req, res) {
   audioStream.pipe(res);
 });
 
-// no auth routes fos users not logged in
+// no auth routes for users not logged in
 // app.use("/api/audio-noauth", routeAudioNoAuth);
 // app.post("/api/audio-noauth/upload", (req, res, err) => {
 //   res.send(req.files);
