@@ -26,19 +26,19 @@ exports.get_by_id = (req, res) => {
 };
 
 // add
-exports.add = (req, res, err) => {
-  console.log('UPLOAD REQ:', req.files)
-  res.send({ msg: 'teste audio controller res'});
-};
-// add sem gridfs
-// exports.add = (req, res) => {
-//   const newAudio = new Audio(req.body);
-//   newAudio.save((err, audio) => {
-//     if (err) return console.error(err);
-//     console.log(audio);
-//     res.status(201).json(audio);
-//   });
+// exports.add = (req, res, err) => {
+//   console.log('UPLOAD REQ:', req.files)
+//   res.send({ msg: 'teste audio controller res'});
 // };
+// add sem gridfs
+exports.add = (req, res) => {
+  const newAudio = new Audio(req.body);
+  newAudio.save((err, audio) => {
+    if (err) return console.error(err);
+    console.log(audio);
+    res.status(201).json(audio);
+  });
+};
 
 // alter
 // exports.alter = (req, res) => {

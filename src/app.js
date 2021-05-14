@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const app = express();
 const server = require('http').createServer(app);
+const AudioController = require("./controller/AudioController")
 
 let protocol = "http";
 let host = process.env.HEROKU_APP_NAME || "localhost";
@@ -44,6 +45,7 @@ const { verifyJWT, authRole } = require("./controller/AuthController");
 const routeLogin = require("./routes/login");
 const routeUser = require("./routes/user");
 const routeTeam = require("./routes/team");
+// const routeAudio = require("./routes/audio");
 const routeAudioNoAuth = require("./routes/audio-noauth");
 
 // log file usign morgan
@@ -140,7 +142,7 @@ io.on("connection", socket => {
   console.log("user connected");
 
   // Log whenever a client disconnects from our websocket server
-  socket.on("disconnect", function() {
+  socket.on("disconnect", function () {
     console.log("user disconnected");
   });
 
@@ -149,7 +151,9 @@ io.on("connection", socket => {
   // using `io.emit()`
   socket.on("clientMessage", message => {
     console.log("Message Received: " + message);
-    io.emit("serverMessage", { type: "new-message", text: message });
+    setTimeout(() =>
+      io.emit("serverMessage", { type: "new-message", text: message })
+      , 2000);
   });
 });
 
@@ -179,24 +183,29 @@ io.on("connection", socket => {
 // });
 
 // const upload = multer({ storage: storage });
-
+// TODO: mover para routes
+app.post("/api/audio-noauth/audio_info", AudioController.add);
+app.get("/api/audio-noauth/", AudioController.list);
 
 app.post('/api/audio-noauth/upload', function (req, res) {
   var form = new formidable.IncomingForm();
-  form.uploadDir = __dirname+"/uploads";
+  form.multiples = true;
+  form.uploadDir = __dirname + "/uploads";
   form.keepExtensions = true;
   form.parse(req, function (err, fields, files) {
-      if (!err) {
-          console.log('Files Uploaded: ' + files.file)
-          Grid.mongo = mongoose.mongo;
-          var gfs = Grid(connection.db);
-          var writestream = gfs.createWriteStream({
-            filename: files.file.name,
-            // testes metadata
-            // metadata: { user: '1', team: '2'}
-          });
-          fs.createReadStream(files.file.path).pipe(writestream);
-      }
+    if (!err) {
+      console.log(fields.idUser);
+      console.log(fields.idTeam);
+      console.log('Files Uploaded: ' + files.file)
+      Grid.mongo = mongoose.mongo;
+      var gfs = Grid(connection.db);
+      var writestream = gfs.createWriteStream({
+        filename: files.file.name,
+        // testes metadata
+        // metadata: { user: '1', team: '2'}
+      });
+      fs.createReadStream(files.file.path).pipe(writestream);
+    }
   });
   form.on('end', function () {
     res.send({ msg: 'Concluído upload de áudio no servidor' });
@@ -230,7 +239,7 @@ app.get("/audio-in-folder", function (req, res) {
   }
 
   // get audio stats (about 1MB?)
-  const audioPath = __dirname+"/uploads/test7.weba";
+  const audioPath = __dirname + "/uploads/test7.weba";
   const audioSize = fs.statSync(audioPath).size;
 
   // Parse Range
