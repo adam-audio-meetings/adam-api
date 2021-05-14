@@ -5,6 +5,7 @@ const path = require("path");
 const app = express();
 const server = require('http').createServer(app);
 const AudioController = require("./controller/AudioController")
+const Audio = require("./model/Audio");
 
 let protocol = "http";
 let host = process.env.HEROKU_APP_NAME || "localhost";
@@ -192,11 +193,14 @@ app.post('/api/audio-noauth/upload', function (req, res) {
   form.multiples = true;
   form.uploadDir = __dirname + "/uploads";
   form.keepExtensions = true;
+  let audioFileId = '';
   form.parse(req, function (err, fields, files) {
     if (!err) {
-      console.log(fields.idUser);
-      console.log(fields.idTeam);
-      console.log('Files Uploaded: ' + files.file)
+      // console.log(fields.idUser);
+      // console.log(fields.idTeam);
+      // console.log(fields.name);
+      // console.log('Files Uploaded: ' + files.file)
+
       Grid.mongo = mongoose.mongo;
       var gfs = Grid(connection.db);
       var writestream = gfs.createWriteStream({
@@ -205,6 +209,31 @@ app.post('/api/audio-noauth/upload', function (req, res) {
         // metadata: { user: '1', team: '2'}
       });
       fs.createReadStream(files.file.path).pipe(writestream);
+      audioFileId = writestream.id;
+
+      // gravar audio info
+      // mock user e audio info
+      let idUser = fields.idUser;
+      // let idTeam = fields.idTeam;
+      let name = fields.name;
+      let transcription = fields.transcription
+      let created_at = new Date();
+
+      let audio_info = {
+        member: idUser,
+        // team: "2",
+        name: name,
+        transcription: transcription,
+        created_at: new Date(),
+        fileId: audioFileId
+      }
+
+      const newAudio = new Audio(audio_info);
+      newAudio.save((err, audio) => {
+        if (err) return console.error(err);
+        console.log(audio);
+        //res.status(201).json(audio);
+      });
     }
   });
   form.on('end', function () {
