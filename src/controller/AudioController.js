@@ -3,7 +3,7 @@ const Audio = require("../model/Audio");
 
 // list all
 exports.list = (req, res) => {
-  Audio.find().
+  Audio.find().sort('-created_at').
     populate('teams', ['name', 'description']).
     exec((err, audios) => {
       if (err) {
