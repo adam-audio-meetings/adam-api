@@ -243,10 +243,10 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 
 // exemplo get audio file em banco
 // https://grokonez.com/node-js/gridfs/nodejs-upload-download-files-to-mongodb-by-stream-based-gridfs-api-mongoose
-app.get('/audio-in-db', (req, res) => {
+app.get('/audio-in-db/:id', (req, res) => {
   // Check if file exists on MongoDB
-  // let filename = 
-  let id = "609b007829740040f84d59af"
+  let id = req.params.id;
+  // let id = "609b007829740040f84d59af" // teste mock
   Grid.mongo = mongoose.mongo;
   let gfs = Grid(connection.db);
   gfs.exist({ _id: id }, (err, file) => {
