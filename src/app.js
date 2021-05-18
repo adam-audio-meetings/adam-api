@@ -186,6 +186,7 @@ io.on("connection", socket => {
 // const upload = multer({ storage: storage });
 // TODO: mover para routes
 app.post("/api/audio-noauth/audio_info", AudioController.add);
+app.post("/api/audio-noauth/audio_listened", AudioController.add);
 app.get("/api/audio-noauth/", AudioController.list);
 
 app.post('/api/audio-noauth/upload', function (req, res) {

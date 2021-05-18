@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 mongoose.Promise = global.Promise
 
-const audioListenerSchema = new mongoose.Schema(
+const audioListenedSchema = new mongoose.Schema(
   {
     // created_at: Date,
     fileId: mongoose.Schema.Types.ObjectId,
@@ -14,6 +14,6 @@ const audioListenerSchema = new mongoose.Schema(
   }
 );
 
-const AudioListener = mongoose.model("AudioListener", audioListenerSchema);
+const AudioListened = mongoose.model("AudioListened", audioListenedSchema);
 
-module.exports = AudioListener;
+module.exports = AudioListened;
