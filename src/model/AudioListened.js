@@ -2,11 +2,9 @@ const mongoose = require("mongoose");
 
 mongoose.Promise = global.Promise
 
-const audioSchema = new mongoose.Schema(
+const audioListenedSchema = new mongoose.Schema(
   {
-    name: String,
-    transcription: String,
-    created_at: Date,
+    // created_at: Date,
     fileId: mongoose.Schema.Types.ObjectId,
     team: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
     member: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
@@ -16,6 +14,6 @@ const audioSchema = new mongoose.Schema(
   }
 );
 
-const Audio = mongoose.model("Audio", audioSchema);
+const AudioListened = mongoose.model("AudioListened", audioListenedSchema);
 
-module.exports = Audio;
+module.exports = AudioListened;

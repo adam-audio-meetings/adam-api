@@ -3,6 +3,23 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const app = express();
+const server = require('http').createServer(app);
+const AudioController = require("./controller/AudioController")
+const Audio = require("./model/Audio");
+
+let protocol = "http";
+let host = process.env.HEROKU_APP_NAME || "localhost";
+let port = process.env.PORT || 3000;
+
+const io = require('socket.io')(server, {
+  //https://socket.io/docs/v3/handling-cors/
+  cors: {
+    // origin: `${protocol}://${host}:${port}`,
+    //origin: `*`, // FIXME
+    origin: 'http://localhost:4200', // FIXME: única instancia
+    methods: ["GET", "POST"]
+  }
+});
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 
@@ -13,6 +30,10 @@ const crypto = require('crypto');
 const Grid = require('gridfs-stream');
 var formidable = require("formidable");
 require('dotenv-safe').config();
+
+// socket.io params
+let timerId = null;
+let sockets = new Set();
 
 
 // disable auth on .env only for quick tests purpose
@@ -25,6 +46,7 @@ const { verifyJWT, authRole } = require("./controller/AuthController");
 const routeLogin = require("./routes/login");
 const routeUser = require("./routes/user");
 const routeTeam = require("./routes/team");
+// const routeAudio = require("./routes/audio");
 const routeAudioNoAuth = require("./routes/audio-noauth");
 
 // log file usign morgan
@@ -68,7 +90,73 @@ app.use(express.urlencoded({ extended: true })); // for parsing applications/x-w
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
+// socket.io tests 1 (não)
+// io.on('connection', socket => {
 
+//   socket.join("room1");
+//   sockets.add(socket);
+//   console.log("Socket rooms: ", socket.rooms);
+//   console.log(`Socket ${socket.id} added`);
+
+//   if (!timerId) {
+//     startTimer();
+//   }
+
+//   socket.on('clientdata', data => {
+//     console.log(data);
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log(`Deleting socket: ${socket.id}`);
+//     sockets.delete(socket);
+//     console.log(`Remaining sockets: ${sockets.size}`);
+//   });
+
+// });
+
+// console.log('Client sockets: ', sockets);
+
+// function startTimer() {
+//   //Simulate stock data received by the server that needs 
+//   //to be pushed to clients
+//   timerId = setInterval(() => {
+//     if (!sockets.size) {
+//       clearInterval(timerId);
+//       timerId = null;
+//       console.log(`Timer stopped`);
+//     }
+//     let value = ((Math.random() * 50) + 1).toFixed(2);
+//     //See comment above about using a "room" to emit to an entire
+//     //group of sockets if appropriate for your scenario
+//     //This example tracks each socket and emits to each one
+//     for (const s of sockets) {
+//       console.log(`Emitting value: ${value}`);
+//       s.emit('data', { data: value });
+//     }
+
+//   }, 2000);
+// }
+
+// socket.io test2
+io.on("connection", socket => {
+  // Log whenever a user connects
+  console.log("user connected");
+
+  // Log whenever a client disconnects from our websocket server
+  socket.on("disconnect", function () {
+    console.log("user disconnected");
+  });
+
+  // When we receive a 'message' event from our client, print out
+  // the contents of that message and then echo it back to our client
+  // using `io.emit()`
+  socket.on("clientMessage", message => {
+    console.log("Message Received: " + message);
+    setTimeout(() =>
+      io.emit("serverMessage", { type: "new-message", text: message })
+      , 2000);
+  });
+});
 
 // Storage engine
 // const storage = new GridFsStorage({
@@ -96,24 +184,58 @@ app.use(morgan("combined"));
 // });
 
 // const upload = multer({ storage: storage });
-
+// TODO: mover para routes
+app.post("/api/audio-noauth/audio_info", AudioController.add);
+app.post("/api/audio-noauth/audio_listened", AudioController.add);
+app.get("/api/audio-noauth/", AudioController.list);
 
 app.post('/api/audio-noauth/upload', function (req, res) {
   var form = new formidable.IncomingForm();
-  form.uploadDir = __dirname+"/uploads";
+  form.multiples = true;
+  form.uploadDir = __dirname + "/uploads";
   form.keepExtensions = true;
+  let audioFileId = '';
   form.parse(req, function (err, fields, files) {
-      if (!err) {
-          console.log('Files Uploaded: ' + files.file)
-          Grid.mongo = mongoose.mongo;
-          var gfs = Grid(connection.db);
-          var writestream = gfs.createWriteStream({
-            filename: files.file.name,
-            // testes metadata
-            metadata: { duration: '1000', user: '1', team: '2'}
-          });
-          fs.createReadStream(files.file.path).pipe(writestream);
+    if (!err) {
+      // console.log(fields.idUser);
+      // console.log(fields.idTeam);
+      // console.log(fields.name);
+      // console.log('Files Uploaded: ' + files.file)
+
+      Grid.mongo = mongoose.mongo;
+      var gfs = Grid(connection.db);
+      var writestream = gfs.createWriteStream({
+        filename: files.file.name,
+        // testes metadata
+        // metadata: { user: '1', team: '2'}
+      });
+      fs.createReadStream(files.file.path).pipe(writestream);
+      audioFileId = writestream.id;
+
+      // gravar audio info
+      // mock user e audio info
+      let idUser = fields.idUser;
+      // let idTeam = fields.idTeam;
+      let name = fields.name;
+      let transcription = fields.transcription
+      let created_at = new Date();
+
+      let audio_info = {
+        member: idUser,
+        // team: "2",
+        name: name,
+        transcription: transcription,
+        created_at: new Date(),
+        fileId: audioFileId
       }
+
+      const newAudio = new Audio(audio_info);
+      newAudio.save((err, audio) => {
+        if (err) return console.error(err);
+        console.log(audio);
+        //res.status(201).json(audio);
+      });
+    }
   });
   form.on('end', function () {
     res.send({ msg: 'Concluído upload de áudio no servidor' });
@@ -122,10 +244,10 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 
 // exemplo get audio file em banco
 // https://grokonez.com/node-js/gridfs/nodejs-upload-download-files-to-mongodb-by-stream-based-gridfs-api-mongoose
-app.get('/audio-in-db', (req, res) => {
+app.get('/audio-in-db/:id', (req, res) => {
   // Check if file exists on MongoDB
-  // let filename = 
-  let id = "609b007829740040f84d59af"
+  let id = req.params.id;
+  // let id = "609b007829740040f84d59af" // teste mock
   Grid.mongo = mongoose.mongo;
   let gfs = Grid(connection.db);
   gfs.exist({ _id: id }, (err, file) => {
@@ -147,7 +269,7 @@ app.get("/audio-in-folder", function (req, res) {
   }
 
   // get audio stats (about 1MB?)
-  const audioPath = __dirname+"/uploads/test7.weba";
+  const audioPath = __dirname + "/uploads/test7.weba";
   const audioSize = fs.statSync(audioPath).size;
 
   // Parse Range
@@ -176,7 +298,7 @@ app.get("/audio-in-folder", function (req, res) {
   audioStream.pipe(res);
 });
 
-// no auth routes fos users not logged in
+// no auth routes for users not logged in
 // app.use("/api/audio-noauth", routeAudioNoAuth);
 // app.post("/api/audio-noauth/upload", (req, res, err) => {
 //   res.send(req.files);
@@ -202,10 +324,6 @@ app.use("/api/users", routeUser);
 app.use("/api/teams", routeTeam);
 
 
-let protocol = "http";
-let host = process.env.HEROKU_APP_NAME || "localhost";
-let port = process.env.PORT || 3000;
-
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server started at ${protocol}://${host}:${port}`);
 });
