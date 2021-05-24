@@ -7,9 +7,9 @@ const saltRounds = 10;
 
 async function existUser(username) {
   let exists = false
-  await User.findOne({username: username}, (err, user) => {
+  await User.findOne({ username: username }, (err, user) => {
     if (err) throw new Error('Error searching user')
-    if (user) exists = true 
+    if (user) exists = true
   });
   return exists
 };
@@ -22,7 +22,7 @@ exports.login = (req, res, next) => {
       if (err) {
         return res.status(500).send(err)
       }
-      if(user) {
+      if (user) {
         const validPassword = bcrypt.compareSync(plaintextPassword, user.password)
         if (validPassword) {
           console.log("Login Authentication OK")
@@ -31,19 +31,21 @@ exports.login = (req, res, next) => {
           const role = user.role
           const expiresIn = 60 * 60 * 1000 // (first value in minutes) = miliseconds
           console.log("role login: " + role)
-          var token = jwt.sign({id, role}, process.env.SECRET, {
+          var token = jwt.sign({ id, role }, process.env.SECRET, {
             expiresIn: expiresIn
           });
           return res.status(201).send({
             auth: true,
             role: role,
+            userId: id,
             expiresIn: expiresIn,
-            token: token});
+            token: token
+          });
         }
       }
       console.log("Login Authentication FAIL")
-      res.status(401).send({ msg: "User or password invalid!"})
-        
+      res.status(401).send({ msg: "User or password invalid!" })
+
     })
   }
 };
@@ -53,20 +55,20 @@ exports.signin = async (req, res, next) => {
     const errorMsg = 'Username already in use.'
     console.log('Username already in use.')
     res.status(403).send({ msg: errorMsg })
-  } 
+  }
   else {
     const plaintextPassword = req.body.password;
     // auto-gen a salt and hash
-    bcrypt.hash(plaintextPassword, saltRounds, function(err, hash) {
-        if (err) {
-          res.status(500).send({ msg: err });
-          return console.error(err);
-        }
-        // Store hash in password DB
-        // console.log(req.body)
-        req.body.password = hash
-        // console.log(req.body)
-        UserController.add(req, res)        
+    bcrypt.hash(plaintextPassword, saltRounds, function (err, hash) {
+      if (err) {
+        res.status(500).send({ msg: err });
+        return console.error(err);
+      }
+      // Store hash in password DB
+      // console.log(req.body)
+      req.body.password = hash
+      // console.log(req.body)
+      UserController.add(req, res)
     });
   }
 };
