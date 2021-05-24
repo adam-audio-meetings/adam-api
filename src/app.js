@@ -90,53 +90,6 @@ app.use(express.urlencoded({ extended: true })); // for parsing applications/x-w
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
-// socket.io tests 1 (não)
-// io.on('connection', socket => {
-
-//   socket.join("room1");
-//   sockets.add(socket);
-//   console.log("Socket rooms: ", socket.rooms);
-//   console.log(`Socket ${socket.id} added`);
-
-//   if (!timerId) {
-//     startTimer();
-//   }
-
-//   socket.on('clientdata', data => {
-//     console.log(data);
-//   });
-
-//   socket.on('disconnect', () => {
-//     console.log(`Deleting socket: ${socket.id}`);
-//     sockets.delete(socket);
-//     console.log(`Remaining sockets: ${sockets.size}`);
-//   });
-
-// });
-
-// console.log('Client sockets: ', sockets);
-
-// function startTimer() {
-//   //Simulate stock data received by the server that needs 
-//   //to be pushed to clients
-//   timerId = setInterval(() => {
-//     if (!sockets.size) {
-//       clearInterval(timerId);
-//       timerId = null;
-//       console.log(`Timer stopped`);
-//     }
-//     let value = ((Math.random() * 50) + 1).toFixed(2);
-//     //See comment above about using a "room" to emit to an entire
-//     //group of sockets if appropriate for your scenario
-//     //This example tracks each socket and emits to each one
-//     for (const s of sockets) {
-//       console.log(`Emitting value: ${value}`);
-//       s.emit('data', { data: value });
-//     }
-
-//   }, 2000);
-// }
-
 // socket.io test2
 io.on("connection", socket => {
   // Log whenever a user connects
@@ -157,31 +110,6 @@ io.on("connection", socket => {
       , 2000);
   });
 });
-
-// Storage engine
-// const storage = new GridFsStorage({
-//   url: mongoURI,
-//   options: {
-//    useNewUrlParser: true,
-//    useUnifiedTopology: true
-//   },
-//   file: (req, file) => {
-//     return new Promise((resolve, reject) => {
-//       crypto.randomBytes(16, (err, buf) => {
-//         if (err) {
-//           return reject(err);
-//         }
-//           console.log('inside audio-noauth storage')
-//         const filename = file.originalname;
-//         const fileInfo = {
-//           filename: filename,
-//           bucketName: "uploads"
-//         };
-//         resolve(fileInfo);
-//       })
-//     })
-//   }
-// });
 
 // const upload = multer({ storage: storage });
 // TODO: mover para routes
