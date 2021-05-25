@@ -116,6 +116,7 @@ io.on("connection", socket => {
 app.post("/api/audio-noauth/audio_info", AudioController.add);
 app.post("/api/audio-noauth/audio_listened", AudioController.add);
 app.get("/api/audio-noauth/", AudioController.list);
+app.get("/api/audio-noauth/search", AudioController.search);
 
 app.post('/api/audio-noauth/upload', function (req, res) {
   var form = new formidable.IncomingForm();
@@ -125,10 +126,10 @@ app.post('/api/audio-noauth/upload', function (req, res) {
   let audioFileId = '';
   form.parse(req, function (err, fields, files) {
     if (!err) {
-      // console.log(fields.idUser);
-      // console.log(fields.idTeam);
-      // console.log(fields.name);
-      // console.log('Files Uploaded: ' + files.file)
+      console.log(fields.userId);
+      console.log(fields.teamId);
+      console.log(fields.name);
+      console.log('Files Uploaded: ' + files.file)
 
       Grid.mongo = mongoose.mongo;
       var gfs = Grid(connection.db);
@@ -142,15 +143,15 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 
       // gravar audio info
       // mock user e audio info
-      let idUser = fields.idUser;
-      // let idTeam = fields.idTeam;
+      let userId = fields.userId;
+      let teamId = fields.teamId;
       let name = fields.name;
       let transcription = fields.transcription
       let created_at = new Date();
 
       let audio_info = {
-        member: idUser,
-        // team: "2",
+        member: userId,
+        team: teamId,
         name: name,
         transcription: transcription,
         created_at: new Date(),
@@ -175,7 +176,6 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 app.get('/audio-in-db/:id', (req, res) => {
   // Check if file exists on MongoDB
   let id = req.params.id;
-  // let id = "609b007829740040f84d59af" // teste mock
   Grid.mongo = mongoose.mongo;
   let gfs = Grid(connection.db);
   gfs.exist({ _id: id }, (err, file) => {

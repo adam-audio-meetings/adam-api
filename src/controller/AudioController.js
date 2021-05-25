@@ -82,31 +82,31 @@ exports.remove = (req, res) => {
 };
 
 // search (filter)
-// exports.search = (req, res) => {
-//   if (req.query) {
-//     const role = req.query.role
-//     const name = req.query.name
-//     const audioname = req.query.audioname
-//     const email = req.query.email
+exports.search = (req, res) => {
+  if (req.query) {
+    const teamId = req.query.teamId;
+    const dateStringStart = req.query.dateStringStart;
+    const dateStringEnd = req.query.dateStringEnd;
 
-//     Audio.find(
-//       {
-//         $or: [
-//           { role: { $regex: new RegExp(role, "ig") } },
-//           { name: { $regex: new RegExp(name, "ig") } },
-//           { audioname: { $regex: new RegExp(audioname, "ig") } },
-//           { email: { $regex: new RegExp(email, "ig") } }
-//         ]
-//       }, (err, audios) => {
-//         if (err) {
-//           res.status(500).send({ msg: err });
-//           return console.error(err);
-//         }
-//         if (audios) {
-//           res.json(audios);
-//         } else {
-//           res.status(404).send({ msg: "Audios not found." });
-//         }
-//       });
-//   }
-// };
+    let searchDateStart = new Date(dateStringStart);
+    let searchDateEnd = new Date(dateStringEnd);
+
+    Audio.find(
+      {
+        $and: [
+          { team: teamId },
+          { created_at: { $gte: searchDateStart, $lt: searchDateEnd } }
+        ]
+      }, (err, audios) => {
+        if (err) {
+          res.status(500).send({ msg: err });
+          return console.error(err);
+        }
+        if (audios) {
+          res.json(audios);
+        } else {
+          res.status(404).send({ msg: "Audios not found." });
+        }
+      });
+  }
+};
