@@ -90,53 +90,6 @@ app.use(express.urlencoded({ extended: true })); // for parsing applications/x-w
 app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
-// socket.io tests 1 (não)
-// io.on('connection', socket => {
-
-//   socket.join("room1");
-//   sockets.add(socket);
-//   console.log("Socket rooms: ", socket.rooms);
-//   console.log(`Socket ${socket.id} added`);
-
-//   if (!timerId) {
-//     startTimer();
-//   }
-
-//   socket.on('clientdata', data => {
-//     console.log(data);
-//   });
-
-//   socket.on('disconnect', () => {
-//     console.log(`Deleting socket: ${socket.id}`);
-//     sockets.delete(socket);
-//     console.log(`Remaining sockets: ${sockets.size}`);
-//   });
-
-// });
-
-// console.log('Client sockets: ', sockets);
-
-// function startTimer() {
-//   //Simulate stock data received by the server that needs 
-//   //to be pushed to clients
-//   timerId = setInterval(() => {
-//     if (!sockets.size) {
-//       clearInterval(timerId);
-//       timerId = null;
-//       console.log(`Timer stopped`);
-//     }
-//     let value = ((Math.random() * 50) + 1).toFixed(2);
-//     //See comment above about using a "room" to emit to an entire
-//     //group of sockets if appropriate for your scenario
-//     //This example tracks each socket and emits to each one
-//     for (const s of sockets) {
-//       console.log(`Emitting value: ${value}`);
-//       s.emit('data', { data: value });
-//     }
-
-//   }, 2000);
-// }
-
 // socket.io test2
 io.on("connection", socket => {
   // Log whenever a user connects
@@ -158,36 +111,12 @@ io.on("connection", socket => {
   });
 });
 
-// Storage engine
-// const storage = new GridFsStorage({
-//   url: mongoURI,
-//   options: {
-//    useNewUrlParser: true,
-//    useUnifiedTopology: true
-//   },
-//   file: (req, file) => {
-//     return new Promise((resolve, reject) => {
-//       crypto.randomBytes(16, (err, buf) => {
-//         if (err) {
-//           return reject(err);
-//         }
-//           console.log('inside audio-noauth storage')
-//         const filename = file.originalname;
-//         const fileInfo = {
-//           filename: filename,
-//           bucketName: "uploads"
-//         };
-//         resolve(fileInfo);
-//       })
-//     })
-//   }
-// });
-
 // const upload = multer({ storage: storage });
 // TODO: mover para routes
 app.post("/api/audio-noauth/audio_info", AudioController.add);
 app.post("/api/audio-noauth/audio_listened", AudioController.add);
 app.get("/api/audio-noauth/", AudioController.list);
+app.get("/api/audio-noauth/search", AudioController.search);
 
 app.post('/api/audio-noauth/upload', function (req, res) {
   var form = new formidable.IncomingForm();
@@ -197,10 +126,10 @@ app.post('/api/audio-noauth/upload', function (req, res) {
   let audioFileId = '';
   form.parse(req, function (err, fields, files) {
     if (!err) {
-      // console.log(fields.idUser);
-      // console.log(fields.idTeam);
-      // console.log(fields.name);
-      // console.log('Files Uploaded: ' + files.file)
+      console.log(fields.userId);
+      console.log(fields.teamId);
+      console.log(fields.name);
+      console.log('Files Uploaded: ' + files.file)
 
       Grid.mongo = mongoose.mongo;
       var gfs = Grid(connection.db);
@@ -214,15 +143,15 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 
       // gravar audio info
       // mock user e audio info
-      let idUser = fields.idUser;
-      // let idTeam = fields.idTeam;
+      let userId = fields.userId;
+      let teamId = fields.teamId;
       let name = fields.name;
       let transcription = fields.transcription
       let created_at = new Date();
 
       let audio_info = {
-        member: idUser,
-        // team: "2",
+        member: userId,
+        team: teamId,
         name: name,
         transcription: transcription,
         created_at: new Date(),
@@ -247,7 +176,6 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 app.get('/audio-in-db/:id', (req, res) => {
   // Check if file exists on MongoDB
   let id = req.params.id;
-  // let id = "609b007829740040f84d59af" // teste mock
   Grid.mongo = mongoose.mongo;
   let gfs = Grid(connection.db);
   gfs.exist({ _id: id }, (err, file) => {

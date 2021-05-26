@@ -178,8 +178,8 @@ exports.subscribe = async function (req, res) {
   try {
     const existsTeam = await existsTeamId(teamId);
     if (existsTeam) {
-      // (fazer em etapa anterior, no crud times)
-      // pesquisar times (somente times em que member não está matriculado)
+      // (fazer em etapa anterior, no crud equipes)
+      // pesquisar equipes (somente equipes em que member não participa)
 
       let subscribed = await isMemberSubscribed(teamId, memberId)
 
@@ -229,8 +229,8 @@ exports.unsubscribe = async function (req, res) {
   try {
     const existsTeam = await existsTeamId(teamId);
     if (existsTeam) {
-      // (fazer em etapa anterior, no crud times)
-      // pesquisar times (somente times em que member não está matriculado)
+      // (fazer em etapa anterior, no crud equipes)
+      // pesquisar equipes (somente equipes em que member não está matriculado)
 
       let subscribed = await isMemberSubscribed(teamId, memberId)
 
