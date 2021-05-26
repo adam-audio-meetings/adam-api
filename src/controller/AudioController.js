@@ -97,7 +97,9 @@ exports.search = (req, res) => {
           { team: teamId },
           { created_at: { $gte: searchDateStart, $lt: searchDateEnd } }
         ]
-      }, (err, audios) => {
+      })
+      .populate('member', ['name', 'username'])
+      .exec((err, audios) => {
         if (err) {
           res.status(500).send({ msg: err });
           return console.error(err);
