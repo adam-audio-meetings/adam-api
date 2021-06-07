@@ -84,9 +84,12 @@ exports.remove = (req, res) => {
 // search (filter)
 exports.search = (req, res) => {
   if (req.query) {
-    const teamId = req.query.teamId;
-    const dateStringStart = req.query.dateStringStart;
-    const dateStringEnd = req.query.dateStringEnd;
+    let teamId = req.query.teamId;
+    let dateStringStart = req.query.dateStringStart;
+    let dateStringEnd = req.query.dateStringEnd;
+    let onlyInfo = req.query.onlyInfo;
+
+    let selectionFields = (onlyInfo == 'true' ? '-fileId' : '');
 
     let searchDateStart = new Date(dateStringStart);
     let searchDateEnd = new Date(dateStringEnd);
@@ -99,6 +102,8 @@ exports.search = (req, res) => {
         ]
       })
       .populate('member', ['name', 'username'])
+      // exclui envio de blob para somente consulta de estatisticas
+      .select(selectionFields)
       .exec((err, audios) => {
         if (err) {
           res.status(500).send({ msg: err });
