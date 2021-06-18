@@ -41,29 +41,58 @@ exports.add = (req, res) => {
 };
 
 // alter
+exports.addListened = (req, res) => {
+  let id = req.params.id;
+  let memberId = req.body.listened_by;
+  //FIXME "member" and "coordinator" roles can only alter their own audios
+  //if (process.env.ENABLE_AUTH === 'true' && req.audioRole != "admin" && req.audioId != id) {
+  // Forbidden: client is known but cannot access this content
+  //  res.sendStatus(403)
+  //} else {
+  // addToSet prevents id duplication
+  let updateMemberId = { $addToSet: { listened_by: memberId } }
+  Audio.findOneAndUpdate(
+    { _id: id },
+    updateMemberId,
+    { new: true },
+    (err, audioActual) => {
+      if (err) {
+        res.sendStatus(400);
+        console.error(err);
+      } else if (audioActual === null) {
+        res.sendStatus(404);
+      } else
+        res.json(audioActual);
+    }
+  );
+  //}
+};
+
+// alter
 // exports.alter = (req, res) => {
 //   let id = req.params.id;
+//   console.log(id);
 //   let audioAlter = req.body;
-//   // "member" and "coordinator" roles can only alter their own audios
-//   if (process.env.ENABLE_AUTH === 'true' && req.audioRole != "admin" && req.audioId != id) {
-//     // Forbidden: client is known but cannot access this content
-//     res.sendStatus(403)
-//   } else {
-//     Audio.findOneAndUpdate(
-//       { _id: id },
-//       audioAlter,
-//       { new: true },
-//       (err, audioActual) => {
-//         if (err) {
-//           res.sendStatus(400);
-//           console.error(err);
-//         } else if (audioActual === null) {
-//           res.sendStatus(404);
-//         } else
-//           res.json(audioActual);
-//       }
-//     );
-//   }
+//   //FIXME "member" and "coordinator" roles can only alter their own audios
+//   //if (process.env.ENABLE_AUTH === 'true' && req.audioRole != "admin" && req.audioId != id) {
+//   // Forbidden: client is known but cannot access this content
+//   //  res.sendStatus(403)
+//   //} else {
+//   Audio.findOneAndUpdate(
+//     { _id: id },
+//     audioAlter,
+//     { new: true },
+//     (err, audioActual) => {
+//       if (err) {
+//         res.sendStatus(400);
+//         console.error(err);
+//       } else if (audioActual === null) {
+//         res.sendStatus(404);
+//       } else
+//         res.json(audioActual);
+//     }
+//   );
+//   //}
 // };
 
 exports.remove = (req, res) => {
