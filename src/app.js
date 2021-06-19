@@ -94,6 +94,13 @@ app.use(morgan("combined"));
 io.on("connection", socket => {
   // Log whenever a user connects
   console.log("user connected");
+  let teamIdRoom = ''
+  socket.on('clienteMessageEnterTeamId', message => {
+    console.log('teamId room to connect: ', message.message)
+    teamIdRoom = message.message
+    socket.join(teamIdRoom)
+    io.to(teamIdRoom).emit("serverMessage", { type: "enter-teamId-room", text: teamIdRoom })
+  })
 
   // Log whenever a client disconnects from our websocket server
   socket.on("disconnect", function () {
@@ -105,8 +112,10 @@ io.on("connection", socket => {
   // using `io.emit()`
   socket.on("clientMessage", message => {
     console.log("Message Received: " + message);
+    console.log("Enviando para teamId room: ", teamIdRoom)
+    console.log('fim de lista de teamIdRoom')
     setTimeout(() =>
-      io.emit("serverMessage", { type: "new-message", text: message })
+      io.to(teamIdRoom).emit("serverMessage", { type: "new-message", text: message })
       , 2000);
   });
 });
