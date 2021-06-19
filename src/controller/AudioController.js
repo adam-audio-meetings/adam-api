@@ -38,32 +38,62 @@ exports.add = (req, res) => {
     console.log(audio);
     res.status(201).json(audio);
   });
+
+};
+
+// alter
+exports.addListened = (req, res) => {
+  let id = req.params.id;
+  let memberId = req.body.listened_by;
+  //FIXME "member" and "coordinator" roles can only alter their own audios
+  //if (process.env.ENABLE_AUTH === 'true' && req.audioRole != "admin" && req.audioId != id) {
+  // Forbidden: client is known but cannot access this content
+  //  res.sendStatus(403)
+  //} else {
+  // addToSet prevents id duplication
+  let updateMemberId = { $addToSet: { listened_by: memberId } }
+  Audio.findOneAndUpdate(
+    { _id: id },
+    updateMemberId,
+    { new: true },
+    (err, audioActual) => {
+      if (err) {
+        res.sendStatus(400);
+        console.error(err);
+      } else if (audioActual === null) {
+        res.sendStatus(404);
+      } else
+        res.json(audioActual);
+    }
+  );
+  //}
 };
 
 // alter
 // exports.alter = (req, res) => {
 //   let id = req.params.id;
+//   console.log(id);
 //   let audioAlter = req.body;
-//   // "member" and "coordinator" roles can only alter their own audios
-//   if (process.env.ENABLE_AUTH === 'true' && req.audioRole != "admin" && req.audioId != id) {
-//     // Forbidden: client is known but cannot access this content
-//     res.sendStatus(403)
-//   } else {
-//     Audio.findOneAndUpdate(
-//       { _id: id },
-//       audioAlter,
-//       { new: true },
-//       (err, audioActual) => {
-//         if (err) {
-//           res.sendStatus(400);
-//           console.error(err);
-//         } else if (audioActual === null) {
-//           res.sendStatus(404);
-//         } else
-//           res.json(audioActual);
-//       }
-//     );
-//   }
+//   //FIXME "member" and "coordinator" roles can only alter their own audios
+//   //if (process.env.ENABLE_AUTH === 'true' && req.audioRole != "admin" && req.audioId != id) {
+//   // Forbidden: client is known but cannot access this content
+//   //  res.sendStatus(403)
+//   //} else {
+//   Audio.findOneAndUpdate(
+//     { _id: id },
+//     audioAlter,
+//     { new: true },
+//     (err, audioActual) => {
+//       if (err) {
+//         res.sendStatus(400);
+//         console.error(err);
+//       } else if (audioActual === null) {
+//         res.sendStatus(404);
+//       } else
+//         res.json(audioActual);
+//     }
+//   );
+//   //}
 // };
 
 exports.remove = (req, res) => {
@@ -84,9 +114,12 @@ exports.remove = (req, res) => {
 // search (filter)
 exports.search = (req, res) => {
   if (req.query) {
-    const teamId = req.query.teamId;
-    const dateStringStart = req.query.dateStringStart;
-    const dateStringEnd = req.query.dateStringEnd;
+    let teamId = req.query.teamId;
+    let dateStringStart = req.query.dateStringStart;
+    let dateStringEnd = req.query.dateStringEnd;
+    let onlyInfo = req.query.onlyInfo;
+
+    let selectionFields = (onlyInfo == 'true' ? '-fileId' : '');
 
     let searchDateStart = new Date(dateStringStart);
     let searchDateEnd = new Date(dateStringEnd);
@@ -97,7 +130,11 @@ exports.search = (req, res) => {
           { team: teamId },
           { created_at: { $gte: searchDateStart, $lt: searchDateEnd } }
         ]
-      }, (err, audios) => {
+      })
+      .populate('member', ['name', 'username'])
+      // exclui envio de blob para somente consulta de estatisticas
+      .select(selectionFields)
+      .exec((err, audios) => {
         if (err) {
           res.status(500).send({ msg: err });
           return console.error(err);

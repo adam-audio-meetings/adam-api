@@ -124,6 +124,7 @@ exports.get_by_id = (req, res) => {
 exports.add = (req, res) => {
   const coordinatorId = req.userId;
   req.body.coordinator = coordinatorId;
+  req.body.members = coordinatorId;
   const newTeam = new Team(req.body);
   newTeam.save((err, team) => {
     if (err) {

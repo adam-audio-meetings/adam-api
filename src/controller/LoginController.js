@@ -38,6 +38,8 @@ exports.login = (req, res, next) => {
             auth: true,
             role: role,
             userId: id,
+            userName: user.name,
+            userUsername: user.username,
             expiresIn: expiresIn,
             token: token
           });
