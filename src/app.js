@@ -163,26 +163,26 @@ app.post('/api/audio-noauth/upload', function (req, res) {
         if (err) return console.error(err);
         console.log(audio);
         //res.status(201).json(audio);
-        if (audio.transcription.length > 0) {
-          // searchKeywordsOnTranscript(audio.transcription)
-          // TODO: mover para controller ou outro
-          // TODO: usar palavras chave definidas pelos nomes dos membros da equipe do áudio
-          let keywords = ['Rodrigo', 'teste', 'Projeto Alfa 1'];
-          keywords.forEach(word => {
-            let found = audio.transtription.toLowerCase().search(word.toLowerCase());
-            if (found >= 0) {
-              console.log('Palavra encontrada:', word)
-            }
 
-          });
+        // TODO: experimental: verificar palavras chaves ao receber a transcrição ou texto
+        // A parte de verificar nomes de usuários citados está no frontend
+        // TODO: mover para controller ou outro
+        // TODO: usar palavras chave definidas pelos nomes dos membros da equipe do áudio
+        // if (audio.transcription.length > 0) {
 
+        //   let keywords = ['teste', 'projeto'];
+        //   keywords.forEach(word => {
+        //     let found = audio.transcription.toLowerCase().search(word.toLowerCase());
+        //     if (found >= 0) {
+        //       console.log('Palavra encontrada:', word)
+        //     }
 
+        //   });
+        //   // console.log(audio.transcription)
+        // } else {
+        //   // console.log('no transcription')
+        // }
 
-
-          console.log(audio.transcription)
-        } else {
-          console.log('no transcription')
-        }
       });
     }
   });
