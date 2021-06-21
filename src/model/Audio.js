@@ -8,6 +8,7 @@ const audioSchema = new mongoose.Schema(
     transcription: String,
     created_at: Date,
     fileId: mongoose.Schema.Types.ObjectId,
+    duration: Number,
     team: { type: mongoose.Schema.Types.ObjectId, ref: "Team" },
     member: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     listened_by: { type: [mongoose.Schema.Types.ObjectId], ref: "User" }

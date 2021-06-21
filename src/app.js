@@ -156,6 +156,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
       let teamId = fields.teamId;
       let name = fields.name;
       let transcription = fields.transcription
+      let duration = fields.duration
       let created_at = new Date();
 
       let audio_info = {
@@ -164,7 +165,8 @@ app.post('/api/audio-noauth/upload', function (req, res) {
         name: name,
         transcription: transcription,
         created_at: new Date(),
-        fileId: audioFileId
+        fileId: audioFileId,
+        duration: duration
       }
 
       const newAudio = new Audio(audio_info);
