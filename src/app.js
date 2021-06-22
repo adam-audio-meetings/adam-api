@@ -95,11 +95,20 @@ io.on("connection", socket => {
   // Log whenever a user connects
   console.log("user connected");
   let teamIdRoom = ''
-  socket.on('clienteMessageEnterTeamId', message => {
-    console.log('teamId room to connect: ', message.message)
+  socket.on('clientMessageEnterTeamId', message => {
+    // console.log('teamId room to connect: ', message.message)
     teamIdRoom = message.message
     socket.join(teamIdRoom)
     io.to(teamIdRoom).emit("serverMessage", { type: "enter-teamId-room", text: teamIdRoom })
+  })
+
+  socket.on('clientMessageNewAudio', message => {
+    // console.log('user send audio: ', message.message)
+    text = message.message
+    socket.join(teamIdRoom)
+    setTimeout(() =>
+      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text })
+      , 1000);
   })
 
   // Log whenever a client disconnects from our websocket server
@@ -111,9 +120,9 @@ io.on("connection", socket => {
   // the contents of that message and then echo it back to our client
   // using `io.emit()`
   socket.on("clientMessage", message => {
-    console.log("Message Received: " + message);
-    console.log("Enviando para teamId room: ", teamIdRoom)
-    console.log('fim de lista de teamIdRoom')
+    // console.log("Message Received: " + message);
+    // console.log("Enviando para teamId room: ", teamIdRoom)
+    // console.log('fim de lista de teamIdRoom')
     setTimeout(() =>
       io.to(teamIdRoom).emit("serverMessage", { type: "new-message", text: message })
       , 2000);
