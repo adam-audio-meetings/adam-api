@@ -102,6 +102,11 @@ io.on("connection", socket => {
     io.to(teamIdRoom).emit("serverMessage", { type: "enter-teamId-room", text: teamIdRoom })
   })
 
+  socket.on('clientMessageMarkedAsListenedOrSeen', message => {
+    // console.log('teamId room to connect: ', message.message)
+    io.to(socket.id).emit("serverMessage", { type: "mark-as-listened-or-seen", text: 'server marked' })
+  })
+
   socket.on('clientMessageNewAudio', message => {
     // console.log('user send audio: ', message.message)
     text = message.message
