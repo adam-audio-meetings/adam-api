@@ -94,16 +94,20 @@ app.use(morgan("combined"));
 io.on("connection", socket => {
   // Log whenever a user connects
   console.log("user connected");
+  console.log('socket.id CONNECTED: ', socket.id)
   let teamIdRoom = ''
 
   socket.on('clientMessageJoinTeamId', message => {
-    // console.log('teamId room to connect: ', message.message)
     teamIdRoom = message.message
     socket.join(teamIdRoom)
+    console.log('teamId room to connect: ', message.message)
+    // console.log('socket.clients JOIN: ', io.sockets.clients())
+    // console.log('socket.clients ON ROOM: ', io.sockets.clients(teamIdRoom))
     io.to(socket.id).emit("serverMessage", { type: "join-teamId-room", text: teamIdRoom })
   })
 
   socket.on('clientMessageLeaveTeamId', message => {
+    console.log('socket.id LEAVE ROOM: ', socket.id)
     teamIdRoom = message.message
     socket.leave(teamIdRoom)
     io.to(socket.id).emit("serverMessage", { type: "leave-teamId-room", text: teamIdRoom })
@@ -113,17 +117,24 @@ io.on("connection", socket => {
     io.to(socket.id).emit("serverMessage", { type: "mark-as-listened-or-seen", text: 'server marked' })
   })
 
+  socket.on('logout', message => {
+    socket.disconnect()
+  })
+
   socket.on('clientMessageNewAudio', message => {
+    console.log('socket.id NEW AUDIO: ', socket.id)
     text = message.message
-    socket.join(teamIdRoom)
+    userId = message.userId
+    // socket.join(teamIdRoom)
     setTimeout(() =>
-      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text })
+      io.to(socket.id).to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId })
       , 1000);
   })
 
   // Log whenever a client disconnects from our websocket server
   socket.on("disconnect", function () {
     console.log("user disconnected");
+    console.log('socket.id DISCONNECTED: ', socket.id)
   });
 
   // When we receive a 'message' event from our client, print out
@@ -154,10 +165,10 @@ app.post('/api/audio-noauth/upload', function (req, res) {
   let audioFileId = '';
   form.parse(req, function (err, fields, files) {
     if (!err) {
-      console.log(fields.userId);
-      console.log(fields.teamId);
-      console.log(fields.name);
-      console.log('Files Uploaded: ' + files.file)
+      // console.log(fields.userId);
+      // console.log(fields.teamId);
+      // console.log(fields.name);
+      // console.log('Files Uploaded: ' + files.file)
 
       Grid.mongo = mongoose.mongo;
       var gfs = Grid(connection.db);
@@ -191,7 +202,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
       const newAudio = new Audio(audio_info);
       newAudio.save((err, audio) => {
         if (err) return console.error(err);
-        console.log(audio);
+        // console.log(audio);
         //res.status(201).json(audio);
 
         // TODO: experimental: verificar palavras chaves ao receber a transcrição ou texto
