@@ -99,7 +99,7 @@ io.on("connection", socket => {
     // console.log('teamId room to connect: ', message.message)
     teamIdRoom = message.message
     socket.join(teamIdRoom)
-    io.to(teamIdRoom).emit("serverMessage", { type: "enter-teamId-room", text: teamIdRoom })
+    io.to(socket.id).emit("serverMessage", { type: "enter-teamId-room", text: teamIdRoom })
   })
 
   socket.on('clientMessageMarkedAsListenedOrSeen', message => {
