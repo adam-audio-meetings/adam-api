@@ -95,20 +95,25 @@ io.on("connection", socket => {
   // Log whenever a user connects
   console.log("user connected");
   let teamIdRoom = ''
-  socket.on('clientMessageEnterTeamId', message => {
+
+  socket.on('clientMessageJoinTeamId', message => {
     // console.log('teamId room to connect: ', message.message)
     teamIdRoom = message.message
     socket.join(teamIdRoom)
-    io.to(socket.id).emit("serverMessage", { type: "enter-teamId-room", text: teamIdRoom })
+    io.to(socket.id).emit("serverMessage", { type: "join-teamId-room", text: teamIdRoom })
+  })
+
+  socket.on('clientMessageLeaveTeamId', message => {
+    teamIdRoom = message.message
+    socket.leave(teamIdRoom)
+    io.to(socket.id).emit("serverMessage", { type: "leave-teamId-room", text: teamIdRoom })
   })
 
   socket.on('clientMessageMarkedAsListenedOrSeen', message => {
-    // console.log('teamId room to connect: ', message.message)
     io.to(socket.id).emit("serverMessage", { type: "mark-as-listened-or-seen", text: 'server marked' })
   })
 
   socket.on('clientMessageNewAudio', message => {
-    // console.log('user send audio: ', message.message)
     text = message.message
     socket.join(teamIdRoom)
     setTimeout(() =>
