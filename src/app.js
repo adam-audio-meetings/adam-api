@@ -20,6 +20,9 @@ const io = require('socket.io')(server, {
     methods: ["GET", "POST"]
   }
 });
+// const io = require('socket.io')();
+// io.attach(server);
+
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 
@@ -91,16 +94,21 @@ app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"));
 
 // socket.io test2
-io.on("connection", socket => {
+io.on("connection", (socket) => {
   // Log whenever a user connects
   console.log("user connected");
   console.log('socket.id CONNECTED: ', socket.id)
+  console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
   let teamIdRoom = ''
 
   socket.on('clientMessageJoinTeamId', message => {
     teamIdRoom = message.message
+
     socket.join(teamIdRoom)
     console.log('teamId room to connect: ', message.message)
+    console.log('socket.io rooms: ', socket.rooms)
+    console.log('socket.sid JOIN ROOM: ', socket.id)
+    console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
     // console.log('socket.clients JOIN: ', io.sockets.clients())
     // console.log('socket.clients ON ROOM: ', io.sockets.clients(teamIdRoom))
     io.to(socket.id).emit("serverMessage", { type: "join-teamId-room", text: teamIdRoom })
@@ -108,8 +116,10 @@ io.on("connection", socket => {
 
   socket.on('clientMessageLeaveTeamId', message => {
     console.log('socket.id LEAVE ROOM: ', socket.id)
+    console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
     teamIdRoom = message.message
     socket.leave(teamIdRoom)
+    console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
     io.to(socket.id).emit("serverMessage", { type: "leave-teamId-room", text: teamIdRoom })
   })
 
@@ -121,13 +131,16 @@ io.on("connection", socket => {
     socket.disconnect()
   })
 
+  // socket.on('login', message => {
+  //  
+  // })
+
   socket.on('clientMessageNewAudio', message => {
     console.log('socket.id NEW AUDIO: ', socket.id)
     text = message.message
     userId = message.userId
-    // socket.join(teamIdRoom)
     setTimeout(() =>
-      io.to(socket.id).to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId })
+      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId })
       , 1000);
   })
 
