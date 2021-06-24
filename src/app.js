@@ -139,8 +139,9 @@ io.on("connection", (socket) => {
     console.log('socket.id NEW AUDIO: ', socket.id)
     text = message.message
     userId = message.userId
+    msgTime = (new Date).toLocaleTimeString()
     setTimeout(() =>
-      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId })
+      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId, msgTime: msgTime })
       , 1000);
   })
 
