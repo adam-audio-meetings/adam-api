@@ -111,7 +111,7 @@ io.on("connection", (socket) => {
     console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
     // console.log('socket.clients JOIN: ', io.sockets.clients())
     // console.log('socket.clients ON ROOM: ', io.sockets.clients(teamIdRoom))
-    io.to(socket.id).emit("serverMessage", { type: "join-teamId-room", text: teamIdRoom })
+    socket.emit("serverMessage", { type: "join-teamId-room", text: teamIdRoom })
   })
 
   socket.on('clientMessageLeaveTeamId', message => {
@@ -120,11 +120,11 @@ io.on("connection", (socket) => {
     teamIdRoom = message.message
     socket.leave(teamIdRoom)
     console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
-    io.to(socket.id).emit("serverMessage", { type: "leave-teamId-room", text: teamIdRoom })
+    socket.emit("serverMessage", { type: "leave-teamId-room", text: teamIdRoom })
   })
 
   socket.on('clientMessageMarkedAsListenedOrSeen', message => {
-    io.to(socket.id).emit("serverMessage", { type: "mark-as-listened-or-seen", text: 'server marked' })
+    socket.emit("serverMessage", { type: "mark-as-listened-or-seen", text: 'server marked' })
   })
 
   socket.on('logout', message => {
@@ -137,6 +137,7 @@ io.on("connection", (socket) => {
 
   socket.on('clientMessageNewAudio', message => {
     console.log('socket.id NEW AUDIO: ', socket.id)
+    console.log('io.sockets.adapter.rooms', io.sockets.adapter.rooms)
     text = message.message
     userId = message.userId
     msgTime = (new Date).toLocaleTimeString()
