@@ -141,8 +141,9 @@ io.on("connection", (socket) => {
     text = message.message
     userId = message.userId
     msgTime = (new Date).toLocaleTimeString()
+    audioId = message.audioId
     setTimeout(() =>
-      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId, msgTime: msgTime })
+      io.to(teamIdRoom).emit("serverMessage", { type: "new-audio-teamId-room", text: text, userId: userId, msgTime: msgTime, audioId: audioId })
       , 1000);
   })
 
@@ -178,7 +179,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
   form.uploadDir = __dirname + "/uploads";
   form.keepExtensions = true;
   let audioFileId = '';
-  form.parse(req, function (err, fields, files) {
+  form.parse(req, async function (err, fields, files) {
     if (!err) {
       // console.log(fields.userId);
       // console.log(fields.teamId);
@@ -202,7 +203,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
       let name = fields.name;
       let transcription = fields.transcription
       let duration = fields.duration
-      let created_at = new Date();
+      // let created_at = new Date();
 
       let audio_info = {
         member: userId,
@@ -218,33 +219,17 @@ app.post('/api/audio-noauth/upload', function (req, res) {
       newAudio.save((err, audio) => {
         if (err) return console.error(err);
         // console.log(audio);
-        //res.status(201).json(audio);
-
-        // TODO: experimental: verificar palavras chaves ao receber a transcrição ou texto
-        // A parte de verificar nomes de usuários citados está no frontend
-        // TODO: mover para controller ou outro
-        // TODO: usar palavras chave definidas pelos nomes dos membros da equipe do áudio
-        // if (audio.transcription.length > 0) {
-
-        //   let keywords = ['teste', 'projeto'];
-        //   keywords.forEach(word => {
-        //     let found = audio.transcription.toLowerCase().search(word.toLowerCase());
-        //     if (found >= 0) {
-        //       console.log('Palavra encontrada:', word)
-        //     }
-
-        //   });
-        //   // console.log(audio.transcription)
-        // } else {
-        //   // console.log('no transcription')
-        // }
-
+        // res.status(201).json(audio);
+        console.log('new uploaded audioId', audio._id)
+        // res.status(201)
+        // res.write({ audioId: audio._id })
+        res.status(201).send({ msg: 'Concluído upload de áudio no servidor', audioId: audio._id });
       });
     }
   });
-  form.on('end', function () {
-    res.send({ msg: 'Concluído upload de áudio no servidor' });
-  });
+  // form.on('end', function () {
+  //   res.send({ msg: 'Concluído upload de áudio no servidor' });
+  // });
 });
 
 // exemplo get audio file em banco
