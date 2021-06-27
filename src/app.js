@@ -123,9 +123,6 @@ io.on("connection", (socket) => {
     socket.emit("serverMessage", { type: "leave-teamId-room", text: teamIdRoom })
   })
 
-  socket.on('clientMessageMarkedAsListenedOrSeen', message => {
-    socket.emit("serverMessage", { type: "mark-as-listened-or-seen", text: 'server marked' })
-  })
 
   socket.on('logout', message => {
     socket.disconnect()
