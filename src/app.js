@@ -7,20 +7,31 @@ const server = require('http').createServer(app);
 const AudioController = require("./controller/AudioController")
 const Audio = require("./model/Audio");
 
-let protocol = "http";
-let host = process.env.HEROKU_APP_NAME || "localhost";
-let port = process.env.PORT || 3000;
-
-const io = require('socket.io')(server, {
-  //https://socket.io/docs/v3/handling-cors/
+// configure CORS // teste para deploy em Heroku
+var corsOptions = {
+  // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
   cors: {
-    // origin: `${protocol}://${host}:${port}`,
-    //origin: `*`, // FIXME
-    // origin: 'http://localhost:4200', // FIXME: única instancia
+    // não pode ser true ou '*'
     origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
-    methods: ["GET", "POST"]
+    methods: ["GET,HEAD,PUT,PATCH,POST,DELETE",]
+
+
   }
-});
+
+
+}
+
+const io = require('socket.io')(server,
+  corsOptions
+  //https://socket.io/docs/v3/handling-cors/
+  // cors: {
+  //   // origin: `${protocol}://${host}:${port}`,
+  //   origin: true, // FIXME
+  //   // origin: 'http://localhost:4200', // FIXME: única instancia
+  //   // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+  //   methods: ["GET", "POST"]
+  // }
+);
 // const io = require('socket.io')();
 // io.attach(server);
 
@@ -82,18 +93,12 @@ connection.once("open", () => {
   console.log("Connection to database estabilished");
 });
 
-// configure CORS // teste para deploy em Heroku
-// var corsOptions = {
-//   // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
-//   origin: '*',
-//   methods: ["GET", "POST"]
-//   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-// }
+
 
 //enable pre-flight across-the-board
-app.options('*', cors())
+// app.options('*', cors())
 // cors
-app.use(cors());
+app.use(cors(corsOptions));
 
 // middlewares
 // app.use(express.json({ limit: '50mb' }); //??? for parsing application/json
@@ -176,12 +181,12 @@ io.on("connection", (socket) => {
 
 // const upload = multer({ storage: storage });
 // TODO: mover para routes
-app.post("/api/audio-noauth/audio_info", AudioController.add);
-app.put("/api/audio-noauth/audio_listened/:id", AudioController.addListened);
-app.get("/api/audio-noauth/", AudioController.list);
-app.get("/api/audio-noauth/search", AudioController.search);
+app.post("/api/audio-noauth/audio_info", cors(corsOptions), AudioController.add);
+app.put("/api/audio-noauth/audio_listened/:id", cors(corsOptions), AudioController.addListened);
+app.get("/api/audio-noauth/", cors(corsOptions), AudioController.list);
+app.get("/api/audio-noauth/search", cors(corsOptions), AudioController.search);
 
-app.post('/api/audio-noauth/upload', function (req, res) {
+app.post('/api/audio-noauth/upload', cors(corsOptions), function (req, res) {
   var form = new formidable.IncomingForm();
   form.multiples = true;
   form.uploadDir = __dirname + "/uploads";
@@ -242,7 +247,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 
 // exemplo get audio file em banco
 // https://grokonez.com/node-js/gridfs/nodejs-upload-download-files-to-mongodb-by-stream-based-gridfs-api-mongoose
-app.get('/api/audio-in-db/:id', (req, res) => {
+app.get('/api/audio-in-db/:id', cors(corsOptions), (req, res) => {
   // Check if file exists on MongoDB
   let id = req.params.id;
   Grid.mongo = mongoose.mongo;
@@ -258,7 +263,7 @@ app.get('/api/audio-in-db/:id', (req, res) => {
 
 // exemplo get audio file na pasta
 // https://dev.to/abdisalan_js/how-to-code-a-video-streaming-server-using-nodejs-2o0
-app.get("/api/audio-in-folder", function (req, res) {
+app.get("/api/audio-in-folder", cors(corsOptions), function (req, res) {
   // Ensure there is a range given for the audio
   const range = req.headers.range;
   if (!range) {
@@ -320,6 +325,9 @@ if (enable_auth === 'true') {
 app.use("/api/users", routeUser);
 app.use("/api/teams", routeTeam);
 
+let protocol = "http";
+let host = process.env.HEROKU_APP_NAME || "localhost";
+let port = process.env.PORT || 3000;
 
 server.listen(port, () => {
   console.log(`Server started at ${protocol}://${host}:${port}`);
