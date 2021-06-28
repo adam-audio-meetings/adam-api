@@ -16,7 +16,8 @@ const io = require('socket.io')(server, {
   cors: {
     // origin: `${protocol}://${host}:${port}`,
     //origin: `*`, // FIXME
-    origin: 'http://localhost:4200', // FIXME: única instancia
+    // origin: 'http://localhost:4200', // FIXME: única instancia
+    origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
     methods: ["GET", "POST"]
   }
 });
@@ -231,7 +232,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
 
 // exemplo get audio file em banco
 // https://grokonez.com/node-js/gridfs/nodejs-upload-download-files-to-mongodb-by-stream-based-gridfs-api-mongoose
-app.get('/audio-in-db/:id', (req, res) => {
+app.get('/api/audio-in-db/:id', (req, res) => {
   // Check if file exists on MongoDB
   let id = req.params.id;
   Grid.mongo = mongoose.mongo;
@@ -247,7 +248,7 @@ app.get('/audio-in-db/:id', (req, res) => {
 
 // exemplo get audio file na pasta
 // https://dev.to/abdisalan_js/how-to-code-a-video-streaming-server-using-nodejs-2o0
-app.get("/audio-in-folder", function (req, res) {
+app.get("/api/audio-in-folder", function (req, res) {
   // Ensure there is a range given for the audio
   const range = req.headers.range;
   if (!range) {
