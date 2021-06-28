@@ -8,11 +8,13 @@ const AudioController = require("./controller/AudioController")
 const Audio = require("./model/Audio");
 
 // configure CORS // teste para deploy em Heroku
-var corsOptions = {
+var corsOptionsSocket = {
   // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
   cors: {
-    // não pode ser true ou '*'
-    origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+    // não pode ser true ou '*'?
+    // usar options
+    // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+    origin: true,
     methods: ["GET,HEAD,PUT,PATCH,POST,DELETE",]
 
 
@@ -22,7 +24,7 @@ var corsOptions = {
 }
 
 const io = require('socket.io')(server,
-  corsOptions
+  corsOptionsSocket
   //https://socket.io/docs/v3/handling-cors/
   // cors: {
   //   // origin: `${protocol}://${host}:${port}`,
@@ -93,7 +95,7 @@ connection.once("open", () => {
   console.log("Connection to database estabilished");
 });
 
-
+let corsOptions = corsOptionsSocket.cors
 
 //enable pre-flight across-the-board
 // app.options('*', cors())
