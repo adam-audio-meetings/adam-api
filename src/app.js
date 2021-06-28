@@ -82,8 +82,14 @@ connection.once("open", () => {
   console.log("Connection to database estabilished");
 });
 
+// configure CORS // teste para deploy em Heroku
+var corsOptions = {
+  origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
 // cors
-app.use(cors());
+app.use(cors(corsOptions));
 
 // middlewares
 // app.use(express.json({ limit: '50mb' }); //??? for parsing application/json
