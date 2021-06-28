@@ -83,13 +83,17 @@ connection.once("open", () => {
 });
 
 // configure CORS // teste para deploy em Heroku
-var corsOptions = {
-  origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-}
+// var corsOptions = {
+//   // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+//   origin: '*',
+//   methods: ["GET", "POST"]
+//   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+// }
 
+//enable pre-flight across-the-board
+app.options('*', cors())
 // cors
-app.use(cors(corsOptions));
+app.use(cors());
 
 // middlewares
 // app.use(express.json({ limit: '50mb' }); //??? for parsing application/json
