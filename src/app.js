@@ -9,12 +9,13 @@ const Audio = require("./model/Audio");
 
 // configure CORS // teste para deploy em Heroku
 var corsOptionsSocket = {
-  // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+  // origin: process.env.FRONTEND_HEROKU_ENDPOINT || 'http://localhost:4200',
   cors: {
     // não pode ser true ou '*'?
     // usar options
-    // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
-    origin: true,
+    // origin: process.env.FRONTEND_HEROKU_ENDPOINT || 'http://localhost:4200',
+    // origin: true,
+    origin: process.env.FRONTEND_HEROKU_ENDPOINT || 'http://localhost:4200',
     methods: ["GET,HEAD,PUT,PATCH,POST,DELETE",]
 
 
@@ -30,7 +31,7 @@ const io = require('socket.io')(server,
   //   // origin: `${protocol}://${host}:${port}`,
   //   origin: true, // FIXME
   //   // origin: 'http://localhost:4200', // FIXME: única instancia
-  //   // origin: process.env.FRONTEND_HEROKU_APP_NAME_AND_PORT || 'http://localhost:4200',
+  //   // origin: process.env.FRONTEND_HEROKU_ENDPOINT || 'http://localhost:4200',
   //   methods: ["GET", "POST"]
   // }
 );
@@ -49,8 +50,8 @@ var formidable = require("formidable");
 require('dotenv-safe').config();
 
 // socket.io params
-let timerId = null;
-let sockets = new Set();
+// let timerId = null;
+// let sockets = new Set();
 
 
 // disable auth on .env only for quick tests purpose
@@ -183,12 +184,13 @@ io.on("connection", (socket) => {
 
 // const upload = multer({ storage: storage });
 // TODO: mover para routes
-app.post("/api/audio-noauth/audio_info", cors(corsOptions), AudioController.add);
-app.put("/api/audio-noauth/audio_listened/:id", cors(corsOptions), AudioController.addListened);
-app.get("/api/audio-noauth/", cors(corsOptions), AudioController.list);
-app.get("/api/audio-noauth/search", cors(corsOptions), AudioController.search);
+// TODO: verificar uso de  cors(corsOptions) aqui
+app.post("/api/audio-noauth/audio_info", AudioController.add);
+app.put("/api/audio-noauth/audio_listened/:id", AudioController.addListened);
+app.get("/api/audio-noauth/", AudioController.list);
+app.get("/api/audio-noauth/search", AudioController.search);
 
-app.post('/api/audio-noauth/upload', cors(corsOptions), function (req, res) {
+app.post('/api/audio-noauth/upload', function (req, res) {
   var form = new formidable.IncomingForm();
   form.multiples = true;
   form.uploadDir = __dirname + "/uploads";
@@ -249,7 +251,7 @@ app.post('/api/audio-noauth/upload', cors(corsOptions), function (req, res) {
 
 // exemplo get audio file em banco
 // https://grokonez.com/node-js/gridfs/nodejs-upload-download-files-to-mongodb-by-stream-based-gridfs-api-mongoose
-app.get('/api/audio-in-db/:id', cors(corsOptions), (req, res) => {
+app.get('/api/audio-in-db/:id', (req, res) => {
   // Check if file exists on MongoDB
   let id = req.params.id;
   Grid.mongo = mongoose.mongo;
@@ -265,7 +267,7 @@ app.get('/api/audio-in-db/:id', cors(corsOptions), (req, res) => {
 
 // exemplo get audio file na pasta
 // https://dev.to/abdisalan_js/how-to-code-a-video-streaming-server-using-nodejs-2o0
-app.get("/api/audio-in-folder", cors(corsOptions), function (req, res) {
+app.get("/api/audio-in-folder", function (req, res) {
   // Ensure there is a range given for the audio
   const range = req.headers.range;
   if (!range) {
