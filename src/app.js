@@ -97,11 +97,15 @@ connection.once("open", () => {
 });
 
 let corsOptions = corsOptionsSocket.cors
+corsOptions['optionsSuccessStatus'] = 200
+
+console.log(corsOptions)
 
 //enable pre-flight across-the-board
 // app.options('*', cors())
 // cors
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors());
 
 // middlewares
 // app.use(express.json({ limit: '50mb' }); //??? for parsing application/json
@@ -194,6 +198,7 @@ app.post('/api/audio-noauth/upload', function (req, res) {
   var form = new formidable.IncomingForm();
   form.multiples = true;
   form.uploadDir = __dirname + "/uploads";
+  // form.uploadDir = __dirname; // TODO: testar alternativa folder para Heroku
   form.keepExtensions = true;
   let audioFileId = '';
   form.parse(req, async function (err, fields, files) {
@@ -335,4 +340,5 @@ let port = process.env.PORT || 3000;
 
 server.listen(port, () => {
   console.log(`Server started at ${protocol}://${host}:${port}`);
+  console.log(`root __dirname: ${__dirname}`);
 });
